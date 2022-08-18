@@ -45,3 +45,13 @@ function CBW_dump_table(tbl, indent)
         end
     end
 end
+
+--[[
+    Returns false if the minimum version does not match 
+]]
+function CBW_minimum_version(version)
+    local gameVersion = getCore():getVersionNumber():gsub("%.", "")
+    CBW_debug("game version = " .. gameVersion)
+    CBW_debug("min version = " .. version)
+    return tonumber(gameVersion, 10) >= version
+end

@@ -4,6 +4,7 @@ CBWSimpleBars = {}
 CBWSimpleBars.MOD_ID = "CBWSimpleBars"
 CBWSimpleBars.CONFIG_FILE = "config.json"
 CBWSimpleBars.VERSION = "0.1"
+CBWSimpleBars.MIN_GAME_VERSION = 4100
 CBWSimpleBars.DEBUG = true
 
 local function CBW_debug(message)
@@ -21,6 +22,12 @@ CBW_info("---- Loading Mod -----")
 CBW_debug("MOD_ID = " .. CBWSimpleBars.MOD_ID)
 CBW_debug("CONFIG_FILE = " .. CBWSimpleBars.CONFIG_FILE)
 CBW_debug("VERSION = " .. CBWSimpleBars.VERSION)
+CBW_debug("MIN_GAME_VERSION = " .. CBWSimpleBars.MIN_GAME_VERSION)
+
+if CBW_minimum_version(CBWSimpleBars.MIN_GAME_VERSION) == false then
+    CBW_info("---- Error loading mod, game version does not match minimum version-----")
+    return
+end
 
 local config = CBW_decode_json(CBWSimpleBars.MOD_ID, CBWSimpleBars.CONFIG_FILE)
 if CBWSimpleBars.DEBUG then
