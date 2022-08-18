@@ -1,4 +1,7 @@
 {
+    "modVersion": 0.1,
+    "minimumGameVersion": 4100,
+    "debugMode": true,
     "defaults": {
         "bars": {
             "health": {
