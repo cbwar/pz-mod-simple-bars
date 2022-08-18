@@ -40,6 +40,8 @@ function CBW_dump_table(tbl, indent)
         if type(v) == "table" then
             print(formatting)
             CBW_dump_table(v, indent + 1)
+        elseif type(v) == "boolean" then
+            print(formatting .. (v and "TRUE" or "FALSE"))
         else
             print(formatting .. v)
         end
@@ -51,7 +53,6 @@ end
 ]]
 function CBW_minimum_version(version)
     local gameVersion = getCore():getVersionNumber():gsub("%.", "")
-    CBW_debug("game version = " .. gameVersion)
-    CBW_debug("min version = " .. version)
+    CBW_debug("GAME VERSION = " .. gameVersion)
     return tonumber(gameVersion, 10) >= version
 end
