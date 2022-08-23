@@ -1,3 +1,5 @@
+-- Common utilities functions
+
 json = require("lib/json")
 
 local function CBW_debug(message)
@@ -13,9 +15,6 @@ end
 function CBW_decode_json(modId, filename)
     CBW_debug("loading json file " .. filename)
     local reader = getModFileReader(modId, filename, true)
-    if reader == nil then
-        reader = getFileReader(filename, true)
-    end
 
     local contents = ""
     local line = reader:readLine()
@@ -27,7 +26,30 @@ function CBW_decode_json(modId, filename)
         end
     end
     reader:close();
+    if contents == "" then
+        contents = "{}"
+    end
     return json.decode(contents)
+end
+
+--[[
+    Write contents to a json file
+]]
+function CBW_save_json(modId, filename, table)
+    CBW_debug("saving json file " .. filename)
+    local writer = getModFileWriter(modId, filename, true, false)
+    writer:write('{"position": {"x": ' .. table.position.x .. '}}')
+    writer:close();
+end
+
+--[[
+    Write contents to a file
+]]
+function CBW_save_file(modId, filename, data)
+    CBW_debug("saving file " .. filename)
+    local writer = getModFileWriter(modId, filename, true, false)
+    writer:write(data)
+    writer:close();
 end
 
 --[[

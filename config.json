@@ -1,29 +1,50 @@
 {
-    "modVersion": 0.1,
-    "minimumGameVersion": 4100,
-    "debugMode": true,
-    "defaults": {
-        "bars": {
-            "health": {
-                "position": [
-                    70,
-                    70
-                ],
-                "height": 80,
-                "width": 10,
-                "color": [
-                    255,
-                    110,
-                    0,
-                    1
-                ]
-            }
-        }
+  "modVersion": 0.1,
+  "minimumGameVersion": 4100,
+  "debugMode": true,
+  "panelWidth": 300,
+  "bars": {
+    "hp": {
+      "color": {
+        "red": 110,
+        "green": 0,
+        "blue": 0,
+        "alpha": 0.75
+      },
+      "dataType": "health"
     },
-    "players": {
-        "0": {},
-        "1": {},
-        "2": {},
-        "3": {}
+    "stress": {
+      "color": {
+        "red": 0,
+        "green": 110,
+        "blue": 0,
+        "alpha": 0.75
+      },
+      "dataType": "stress"
+    },
+    "thirst": {
+      "color": {
+        "red": 0,
+        "green": 0,
+        "blue": 110,
+        "alpha": 0.75
+      },
+      "dataType": "thirst"
+    },
+    "hunger": {
+      "color": {
+        "red": 110,
+        "green": 110,
+        "blue": 0,
+        "alpha": 0.75
+      },
+      "dataType": "hunger"
     }
+  },
+  "defaults": {
+    "position": {
+      "x": 200,
+      "y": 400
+    }
+  }
 }
