@@ -188,7 +188,6 @@ function CBWSimpleBars_createPanel(playerConfig, playerIndex)
         CBWSimpleBars.panel:pushBar(name, config, CBWSimpleBars_getPlayerData)
     end
 
-    CBWSimpleBars.panel:pushButton("Close", CBWSimpleBars.panel.hide)
     CBWSimpleBars.panel:addToUIManager()
     return CBWSimpleBars.panel
 end
