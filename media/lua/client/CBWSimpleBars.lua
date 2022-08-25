@@ -1,7 +1,7 @@
 require("CBWSimpleBarsCommon")
 require "ISUI/ISPanel"
 
-CBWSimpleBars = { }
+CBWSimpleBars = {}
 CBWSimpleBars.MOD_ID = "CBWSimpleBars"
 CBWSimpleBars.CONFIG_FILE = "config.json"
 
@@ -131,14 +131,14 @@ function CBWSimpleBarsPanel:refreshHeight()
     self:setHeight(self.pushHeight - self.spaceBetweenItems + self.innerPadding)
 end
 
-function CBWSimpleBars:loadConfig()
+function CBWSimpleBars_loadConfig()
     local config = CBW_decode_json(CBWSimpleBars.MOD_ID, CBWSimpleBars.CONFIG_FILE)
     CBWSimpleBars.VERSION = config["modVersion"]
     CBWSimpleBars.MIN_GAME_VERSION = config["minimumGameVersion"]
     CBWSimpleBars.DEBUG = config["debugMode"]
     CBWSimpleBars.CONFIG = config
 
-    self.playerConfig = {
+    CBWSimpleBars.playerConfig = {
         ["0"] = config.defaults,
         ["1"] = config.defaults,
         ["2"] = config.defaults,
@@ -147,45 +147,45 @@ function CBWSimpleBars:loadConfig()
     return config
 end
 
-function CBWSimpleBars:loadPlayerConfig(playerIndex)
+function CBWSimpleBars_loadPlayerConfig(playerIndex)
     local file = "playerConfig_" .. playerIndex .. ".json"
     local config = CBW_decode_json(CBWSimpleBars.MOD_ID, file)
     if not config.position.x or not config.position.y then
         config["position"] = {
-            ["x"] = self.CONFIG.defaults.position.x,
-            ["y"] = self.CONFIG.defaults.position.y
+            ["x"] = CBWSimpleBars.CONFIG.defaults.position.x,
+            ["y"] = CBWSimpleBars.CONFIG.defaults.position.y
         }
     end
-    self.playerConfig[tostring(playerIndex)] = config
+    CBWSimpleBars.playerConfig[tostring(playerIndex)] = config
     return config
 end
 
 ---createPanel
 ---@param playerConfig table
 ---@param playerIndex int
-function CBWSimpleBars:createPanel(playerConfig, playerIndex)
-    if self.panel and not CBWSimpleBars.DEBUG then
+function CBWSimpleBars_createPanel(playerConfig, playerIndex)
+    if CBWSimpleBars.panel and not CBWSimpleBars.DEBUG then
         CBW_debug("panel already created")
-        return self.panel
+        return CBWSimpleBars.panel
     end
     CBW_debug("creating panel")
-    self.panel = CBWSimpleBarsPanel:new(playerConfig.position.x, playerConfig.position.y, CBWSimpleBars.CONFIG.panelWidth)
-    self.panel:initialise()
+    CBWSimpleBars.panel = CBWSimpleBarsPanel:new(playerConfig.position.x, playerConfig.position.y, CBWSimpleBars.CONFIG.panelWidth)
+    CBWSimpleBars.panel:initialise()
 
     for _, bar in pairs(CBWSimpleBars.CONFIG.bars) do
-        local barValue = self:getPlayerData(bar.dataType, playerIndex)
-        self.panel:pushBar(barValue, bar.color)
+        local barValue = CBWSimpleBars_getPlayerData(bar.dataType, playerIndex)
+        CBWSimpleBars.panel:pushBar(barValue, bar.color)
     end
 
-    self.panel:pushButton("Close", self.panel.hide)
-    self.panel:addToUIManager()
-    return self.panel
+    CBWSimpleBars.panel:pushButton("Close", CBWSimpleBars.panel.hide)
+    CBWSimpleBars.panel:addToUIManager()
+    return CBWSimpleBars.panel
 end
 
 ---getPlayerData
 ---@param dataType string
 ---@param playerIndex int
-function CBWSimpleBars:getPlayerData(dataType, playerIndex)
+function CBWSimpleBars_getPlayerData(dataType, playerIndex)
     local player = getSpecificPlayer(playerIndex)
     CBW_debug("get player data for " .. dataType)
     local stats = player:getStats()
@@ -205,7 +205,7 @@ end
 ---CBWSimpleBars_on_create_player
 ---@param playerIndex int
 ---@param player IsoPlayer
-function CBWSimpleBars:onCreatePlayer(playerIndex, player)
+function CBWSimpleBars_onCreatePlayer(playerIndex, player)
     CBW_debug("into create player #" .. playerIndex)
 
     if player == nil then
@@ -218,13 +218,13 @@ function CBWSimpleBars:onCreatePlayer(playerIndex, player)
         return
     end
 
-    local playerConfig = self:loadPlayerConfig(playerIndex)
-    self:createPanel(playerConfig, playerIndex)
-    self.panel:show()
+    local playerConfig = CBWSimpleBars_loadPlayerConfig(playerIndex)
+    CBWSimpleBars_createPanel(playerConfig, playerIndex)
+    CBWSimpleBars.panel:show()
 end
 
 CBW_info("---- Loading Mod -----")
-local config = CBWSimpleBars:loadConfig()
+local config = CBWSimpleBars_loadConfig()
 
 CBW_debug("MOD_ID = " .. CBWSimpleBars.MOD_ID)
 CBW_debug("CONFIG_FILE = " .. CBWSimpleBars.CONFIG_FILE)
@@ -241,7 +241,7 @@ if CBWSimpleBars.DEBUG then
     CBW_dump_table(config)
 
     local function CBWSimpleBars_debug()
-        CBWSimpleBars:onCreatePlayer(0)
+        CBWSimpleBars_onCreatePlayer(0)
     end
     Events.OnObjectRightMouseButtonUp.Add(CBWSimpleBars_debug)
 end
@@ -265,6 +265,6 @@ function CBWSimpleBars_saveAllPlayersConfig()
     end
 end
 
-Events.OnCreatePlayer.Add(CBWSimpleBars.onCreatePlayer)
+Events.OnCreatePlayer.Add(CBWSimpleBars_onCreatePlayer)
 Events.EveryHours.Add(CBWSimpleBars_saveAllPlayersConfig)
 
