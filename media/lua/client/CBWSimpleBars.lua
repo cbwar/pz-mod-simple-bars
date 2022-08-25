@@ -228,19 +228,22 @@ function CBWSimpleBars_createUI(playerIndex, player)
         CBW_debug("player is not local")
         return
     end
-
-    local playerConfig = CBWSimpleBars_loadPlayerConfig(playerIndex)
-    CBWSimpleBars_createPanel(playerConfig, playerIndex)
-    CBWSimpleBars.panel:show()
+    if CBWSimpleBars.panel then
+        CBWSimpleBars.panel:show()
+    else
+        local playerConfig = CBWSimpleBars_loadPlayerConfig(playerIndex)
+        CBWSimpleBars_createPanel(playerConfig, playerIndex)
+    end
 end
 
 ---CBWSimpleBars_onPlayerUpdate
 function CBWSimpleBars_updateUI()
     CBW_debug("CBWSimpleBars_updateUI called")
-    if CBWSimpleBars.panel then
-        for name, bar in pairs(CBWSimpleBars.panel.bars) do
-            bar:refreshValue()
-        end
+    if not CBWSimpleBars.panel then
+        return
+    end
+    for name, bar in pairs(CBWSimpleBars.panel.bars) do
+        bar:refreshValue()
     end
 end
 
