@@ -1,7 +1,7 @@
 require("CBWSimpleBarsCommon")
 require "ISUI/ISPanel"
 
-CBWSimpleBars = {}
+CBWSimpleBars = { panel = nil }
 CBWSimpleBars.MOD_ID = "CBWSimpleBars"
 CBWSimpleBars.CONFIG_FILE = "config.json"
 
@@ -58,25 +58,35 @@ function ISPanelWithTooltip:prerender()
 end
 
 CBWSimpleBarsBar = ISPanelWithTooltip:derive("CBWSimpleBarsBar")
-function CBWSimpleBarsBar:new(x, y, width, height, value, color, tooltip)
+function CBWSimpleBarsBar:new(name, x, y, width, height, config, valueFct)
     local o = {}
     o = ISPanelWithTooltip:new(x, y, width, height)
     setmetatable(o, self)
     self.__index = self
     o.borderColor = { r = 1, g = 1, b = 1, a = 0.2 }
     o.backgroundColor = { r = 100, g = 5, b = 5, a = 0.5 }
-    o.value = value
-    o.color = color
-    o.iconWidth = 10
-    o.textWidth = 30
-    o.tooltip = tooltip or "" .. value .. "%"
+    o.value = 0
+    o.valueFct = valueFct
+    o.color = config.color
+    o.config = config
+    o.tooltip = ""
+    o.name = name
+    o.coloredBar = nil
     return o
 end
 
+function CBWSimpleBarsBar:refreshValue()
+    self.value = self.valueFct(self.config.dataType, 0)
+    self.tooltip = self.name .. ": " .. self.value .. "%"
+    if self.coloredBar then
+        self.coloredBar:setWidth(math.floor(self.width * self.value / 100.0))
+    end
+end
+
 function CBWSimpleBarsBar:createChildren()
-    local w = (self.width - self.iconWidth - 2) * self.value / 100.0
+    local w = math.floor(self.width * self.value / 100.0)
     CBW_debug("w = " .. w)
-    self.coloredBar = ISPanel:new(self.iconWidth + 2, 0, math.floor(w), self.height)
+    self.coloredBar = ISPanel:new(2, 0, w, self.height)
     self.coloredBar:initialise()
     self.coloredBar.showBorder = false
     self.coloredBar.borderColor.a = 0.0
@@ -102,6 +112,7 @@ function CBWSimpleBarsPanel:new(x, y, width)
     o.barsHeight = 10
     o.buttonsHeight = 20
     o.pushHeight = o.innerPadding
+    o.bars = {}
     return o
 end
 function CBWSimpleBarsPanel:pushButton(title, action)
@@ -113,13 +124,14 @@ function CBWSimpleBarsPanel:pushButton(title, action)
     self:refreshHeight()
     self:addChild(closeButton)
 end
-function CBWSimpleBarsPanel:pushBar(value, color)
-    CBW_debug("new bar created with value = " .. value)
-    local bar = CBWSimpleBarsBar:new(self.innerPadding, self.pushHeight, self.width - self.innerPadding * 2, self.barsHeight, value, color);
-    bar:initialise()
+function CBWSimpleBarsPanel:pushBar(name, config, valueFct)
+    CBW_debug("new bar '" .. name .. "' created")
+    self.bars[name] = CBWSimpleBarsBar:new(name, self.innerPadding, self.pushHeight, self.width - self.innerPadding * 2, self.barsHeight, config, valueFct);
+    self.bars[name]:initialise()
+    self.bars[name]:refreshValue()
     self.pushHeight = self.pushHeight + self.barsHeight + self.spaceBetweenItems
     self:refreshHeight()
-    self:addChild(bar)
+    self:addChild(self.bars[name])
 end
 function CBWSimpleBarsPanel:show()
     self:setVisible(true)
@@ -172,9 +184,8 @@ function CBWSimpleBars_createPanel(playerConfig, playerIndex)
     CBWSimpleBars.panel = CBWSimpleBarsPanel:new(playerConfig.position.x, playerConfig.position.y, CBWSimpleBars.CONFIG.panelWidth)
     CBWSimpleBars.panel:initialise()
 
-    for _, bar in pairs(CBWSimpleBars.CONFIG.bars) do
-        local barValue = CBWSimpleBars_getPlayerData(bar.dataType, playerIndex)
-        CBWSimpleBars.panel:pushBar(barValue, bar.color)
+    for name, config in pairs(CBWSimpleBars.CONFIG.bars) do
+        CBWSimpleBars.panel:pushBar(name, config, CBWSimpleBars_getPlayerData)
     end
 
     CBWSimpleBars.panel:pushButton("Close", CBWSimpleBars.panel.hide)
@@ -187,7 +198,7 @@ end
 ---@param playerIndex int
 function CBWSimpleBars_getPlayerData(dataType, playerIndex)
     local player = getSpecificPlayer(playerIndex)
-    CBW_debug("get player data for " .. dataType)
+    CBW_debug("get player " .. playerIndex .. " data for " .. dataType)
     local stats = player:getStats()
 
     if dataType == "health" then
@@ -205,7 +216,7 @@ end
 ---CBWSimpleBars_on_create_player
 ---@param playerIndex int
 ---@param player IsoPlayer
-function CBWSimpleBars_onCreatePlayer(playerIndex, player)
+function CBWSimpleBars_createUI(playerIndex, player)
     CBW_debug("into create player #" .. playerIndex)
 
     if player == nil then
@@ -221,6 +232,16 @@ function CBWSimpleBars_onCreatePlayer(playerIndex, player)
     local playerConfig = CBWSimpleBars_loadPlayerConfig(playerIndex)
     CBWSimpleBars_createPanel(playerConfig, playerIndex)
     CBWSimpleBars.panel:show()
+end
+
+---CBWSimpleBars_onPlayerUpdate
+function CBWSimpleBars_updateUI()
+    CBW_debug("CBWSimpleBars_updateUI called")
+    if CBWSimpleBars.panel then
+        for name, bar in pairs(CBWSimpleBars.panel.bars) do
+            bar:refreshValue()
+        end
+    end
 end
 
 CBW_info("---- Loading Mod -----")
@@ -241,7 +262,7 @@ if CBWSimpleBars.DEBUG then
     CBW_dump_table(config)
 
     local function CBWSimpleBars_debug()
-        CBWSimpleBars_onCreatePlayer(0)
+        CBWSimpleBars_createUI(0)
     end
     Events.OnObjectRightMouseButtonUp.Add(CBWSimpleBars_debug)
 end
@@ -265,6 +286,6 @@ function CBWSimpleBars_saveAllPlayersConfig()
     end
 end
 
-Events.OnCreatePlayer.Add(CBWSimpleBars_onCreatePlayer)
-Events.EveryHours.Add(CBWSimpleBars_saveAllPlayersConfig)
-
+Events.OnCreatePlayer.Add(CBWSimpleBars_createUI)
+--Events.EveryHours.Add(CBWSimpleBars_saveAllPlayersConfig)
+Events.EveryOneMinute.Add(CBWSimpleBars_updateUI)
