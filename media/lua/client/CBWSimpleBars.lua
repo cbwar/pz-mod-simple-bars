@@ -115,6 +115,12 @@ function CBWSimpleBarsPanel:new(x, y, width)
     o.bars = {}
     return o
 end
+function CBWSimpleBarsPanel:onMouseUp(x, y, ...)
+    ISPanel.onMouseUp(self, x, y, ...)
+    CBWSimpleBars.playerConfig["0"].position.x = self.x
+    CBWSimpleBars.playerConfig["0"].position.y = self.y
+    CBWSimpleBars_saveAllPlayersConfig()
+end
 function CBWSimpleBarsPanel:pushButton(title, action)
     CBW_debug("new button created")
     local closeButton = ISButton:new(self.innerPadding, self.pushHeight,
