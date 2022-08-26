@@ -46,14 +46,7 @@ function ISPanelWithTooltip:updateTooltip()
 end
 
 function ISPanelWithTooltip:prerender()
-    -- Call parent
-    -- parent:prerender
-    if self.background then
-        self:drawRectStatic(0, 0, self.width, self.height, self.backgroundColor.a, self.backgroundColor.r, self.backgroundColor.g, self.backgroundColor.b);
-        self:drawRectBorderStatic(0, 0, self.width, self.height, self.borderColor.a, self.borderColor.r, self.borderColor.g, self.borderColor.b);
-    end
-    -- /parent:prerender
-
+    ISPanel.prerender(self)
     self:updateTooltip()
 end
 
@@ -63,7 +56,7 @@ function CBWSimpleBarsBar:new(name, x, y, width, height, config, valueFct)
     o = ISPanelWithTooltip:new(x, y, width, height)
     setmetatable(o, self)
     self.__index = self
-    o.borderColor = { r = 1, g = 1, b = 1, a = 0.2 }
+    o.borderColor.a = 0.0
     o.backgroundColor = { r = 100, g = 5, b = 5, a = 0.5 }
     o.value = 0
     o.valueFct = valueFct
@@ -86,7 +79,7 @@ end
 function CBWSimpleBarsBar:createChildren()
     local w = math.floor(self.width * self.value / 100.0)
     CBW_debug("w = " .. w)
-    self.coloredBar = ISPanel:new(2, 0, w, self.height)
+    self.coloredBar = ISPanel:new(0, 0, w, self.height)
     self.coloredBar:initialise()
     self.coloredBar.showBorder = false
     self.coloredBar.borderColor.a = 0.0
@@ -100,23 +93,23 @@ function CBWSimpleBarsPanel:new(x, y, width)
     o = ISPanel:new(x, y, width, 0)
     setmetatable(o, self)
     self.__index = self
-    o.borderColor = { r = 1, g = 1, b = 1, a = 0.2 }
-    o.backgroundColor = { r = 0, g = 0, b = 0, a = 0.5 }
+    o.borderColor.a = 0.0
+    o.backgroundColor = { r = 0, g = 0, b = 0, a = 0.9 }
     o.anchorLeft = true
     o.anchorRight = true
     o.anchorTop = true
     o.anchorBottom = true
     o.moveWithMouse = true
-    o.innerPadding = 10
-    o.spaceBetweenItems = 5
-    o.barsHeight = 10
+    o.padding = { top = 2, bottom = 2, left = 15, right = 2 }
+    o.spaceBetweenItems = 2
+    o.barsHeight = 5
     o.buttonsHeight = 20
-    o.pushHeight = o.innerPadding
+    o.pushHeight = o.padding.top
     o.bars = {}
     return o
 end
-function CBWSimpleBarsPanel:onMouseUp(x, y, ...)
-    ISPanel.onMouseUp(self, x, y, ...)
+function CBWSimpleBarsPanel:onMouseUp(x, y)
+    ISPanel.onMouseUp(self, x, y)
     CBWSimpleBars.playerConfig["0"].position.x = self.x
     CBWSimpleBars.playerConfig["0"].position.y = self.y
     CBWSimpleBars_saveAllPlayersConfig()
@@ -127,16 +120,20 @@ function CBWSimpleBarsPanel:pushButton(title, action)
             self.width - self.innerPadding * 2, self.buttonsHeight, title, self, action);
     closeButton:initialise();
     self.pushHeight = self.pushHeight + self.buttonsHeight + self.spaceBetweenItems
-    self:refreshHeight()
+    self:setHeight(self.pushHeight)
     self:addChild(closeButton)
 end
 function CBWSimpleBarsPanel:pushBar(name, config, valueFct)
     CBW_debug("new bar '" .. name .. "' created")
-    self.bars[name] = CBWSimpleBarsBar:new(name, self.innerPadding, self.pushHeight, self.width - self.innerPadding * 2, self.barsHeight, config, valueFct);
+    local x = self.padding.left
+    local y = self.pushHeight
+    local height = config.height or self.barsHeight
+    local width = self.width - (self.padding.left + self.padding.right)
+    self.bars[name] = CBWSimpleBarsBar:new(name, x, y, width, height, config, valueFct);
     self.bars[name]:initialise()
     self.bars[name]:refreshValue()
-    self.pushHeight = self.pushHeight + self.barsHeight + self.spaceBetweenItems
-    self:refreshHeight()
+    self.pushHeight = self.pushHeight + height + self.spaceBetweenItems
+    self:setHeight(self.pushHeight)
     self:addChild(self.bars[name])
 end
 function CBWSimpleBarsPanel:show()
@@ -144,9 +141,6 @@ function CBWSimpleBarsPanel:show()
 end
 function CBWSimpleBarsPanel:hide()
     self:setVisible(false)
-end
-function CBWSimpleBarsPanel:refreshHeight()
-    self:setHeight(self.pushHeight - self.spaceBetweenItems + self.innerPadding)
 end
 
 function CBWSimpleBars_loadConfig()
@@ -209,11 +203,17 @@ function CBWSimpleBars_getPlayerData(dataType, playerIndex)
     if dataType == "health" then
         return player:getBodyDamage():getHealth()
     elseif dataType == "stress" then
-        return math.floor(stats:getStress() * 100)
+        return 100 - math.floor(stats:getStress() * 100)
     elseif dataType == "thirst" then
         return 100 - math.floor(stats:getThirst() * 100)
     elseif dataType == "hunger" then
         return 100 - math.floor(stats:getHunger() * 100)
+    elseif dataType == "endurance" then
+        return math.floor(stats:getEndurance() * 100)
+    elseif dataType == "fatigue" then
+        return 100 - math.floor(stats:getFatigue() * 100)
+    elseif dataType == "morale" then
+        return 100 - math.floor(stats:getMorale() * 100)
     end
     return -1
 end
